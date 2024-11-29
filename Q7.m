@@ -32,17 +32,19 @@ X = a+L*(0:N-1)/N;                % Dimensionless coordinates
 P = (2*pi/L)*[0:N/2-1,-N/2:-1]; % Dimensionless momentum
 
 % Set DVR parameters 
-T = 50*pi; %pi*pi ; %5;                  % Time duration of the evolution
+T = 70*pi; %pi*pi ; %5;                  % Time duration of the evolution
 M = 10^5; %10^3;                % Total No. of steps in the evolution
 dt = T/M;                       % Time step
 
 % Set system and perturbation parameters
 n_eigenstate = 0; % 0 is ground state, 1 is first excited state, etc.
-excited_label = 2;
 
 number_of_trials = 1;
 A_vector = (1:number_of_trials).*0.01;
+
 w = 0.05;
+excited_label = 3;
+
 w0 = 1.0;
 
 % Set and display plots parameters
@@ -50,7 +52,7 @@ plot_initial_state = false;
 plot_animation = false;
 plot_final_state = false;
 plot_transition_probabilities = true;
-plot_theory = false;
+plot_theory = true;
 
 frames = 100;
 x_lim = 20;
@@ -220,19 +222,38 @@ fs = 22; % this is the fontsize I used, seems to be working pretty well on latex
 if plot_transition_probabilities
     figure('Name','Transition Probabilities');
     hold on;
-        plot(time/pi, transition_probabilities, 'LineWidth', 2.2, 'DisplayName', 'Numerical (Split-Operator)', 'Color', 'b');
+        % Downsample the data for smoother rendering
+    downsample_factor = 100; % Adjust this for smoother curves
+    time_downsampled = time(1:downsample_factor:end); % Downsampled time
+    
+    % Plot computational results
+    probabilities_downsampled = transition_probabilities(1:downsample_factor:end);
+   transition_prob_theory_downsampled = transition_prob_theory(1:downsample_factor:end);
+
+        plot(time_downsampled/pi, probabilities_downsampled, 'LineWidth', 2.9, 'DisplayName', 'Numerical (Split-Operator)', 'Color', 'b');
         if plot_theory
-            plot(time/pi, transition_prob_theory, 'LineWidth', 2.2, 'DisplayName', 'Theory', 'Color', 'r');
+            plot(time_downsampled/pi, transition_prob_theory_downsampled, 'LineWidth', 2.9, 'DisplayName', 'Theory', 'Color', 'r');
         end
     legend
     %title('Transition Probability to First Excited State');
-    %xlim([0, 70]);
+    xlim([0, 70]);
     xlabel('Time (multiples of $\pi$)', 'FontSize', fs, 'Interpreter', 'latex');
-    ylabel('Transition Probability', 'FontSize', fs, 'Interpreter', 'latex');
+    ylabel('Transition Probability $P_{3 \leftarrow 0}$', 'FontSize', fs, 'Interpreter', 'latex');
     grid on;
     %yticks([0, 0.01, 0.02, 0.03, 0.04]); % use this to manually set y ticks
 
     pbaspect([2 1 1]); % Uncomment if you want a specific aspect ratio
+
+    annotation('textbox', [0.24, 0.625, 0.1, 0.1], ...
+               'String', sprintf('$A = %.2f$, $\\omega = %.2f$, $T = %.0f \\pi$', A, w, T / pi), ...
+               'Interpreter', 'latex', ...
+               'FontSize', fs, ...
+               'LineStyle', '-', ... % Add border around the box
+               'EdgeColor', 'k', ... % Black border
+               'BackgroundColor', [0.9, 0.9, 0.9], ... % Light grey
+               'HorizontalAlignment', 'center', ... % Center text horizontally
+               'VerticalAlignment', 'middle');      % Center text vertically    
+
     % Optimize tick marks and their size
     set(gca, 'FontSize', fs, 'LineWidth', 1.2);
     exportgraphics(gcf, sprintf('Q7_Transition_Theory_v_Numerical_A=%.3f_w=%.3f_e=%.1f.png', A, w, excited_label), 'Resolution', 300);

@@ -32,7 +32,7 @@ X = a+L*(0:N-1)/N;                % Dimensionless coordinates
 P = (2*pi/L)*[0:N/2-1,-N/2:-1]; % Dimensionless momentum
 
 % Set DVR parameters 
-T = pi*pi*20; %pi*pi ; %5;                  % Time duration of the evolution
+T = 70*pi; %pi*pi ; %5;                  % Time duration of the evolution
 M = 10^4; %10^3;                % Total No. of steps in the evolution
 dt = T/M;                       % Time step
 
@@ -40,8 +40,8 @@ dt = T/M;                       % Time step
 n_eigenstate = 0; % 0 is ground state, 1 is first excited state, etc.
 
 number_of_trials = 1;
-A_vector = (1:number_of_trials).*0.1;
-w = 0.500000000000000001;
+A_vector = (1:number_of_trials).*0.25;
+w = 0.51;
 w0 = 1.0;
 
 % Set and display plots parameters
@@ -209,10 +209,7 @@ fprintf('Maximum transition probability: %.7f at time %.4f pi \n', max_prob, tim
 matrix_element = A / (sqrt(2)*exp(1/4));
 fprintf('Vnm/A = %.4f \n', matrix_element/A);
 w_diff = w - w0;
-second_order_scaling = A^3 * 2*1e-2;
 transition_prob_theory = matrix_element^2 * ((sin((w+w0) * time / 2)/(w0+w) ).^ 2 + (sin((w-w0) * time / 2)/(w-w0) ).^ 2 + (cos(w*time).^2-cos(w0*time).*cos(w*time))/(w0^2-w^2));
-second_order_theory = second_order_scaling * (sin(3/2*w*time).*sin((2*w-w0)*time/2).*sin((w+w0)*time/2)/(w0-2*w)/(w0+w) + sin(1/2*w*time).*sin((2*w-w0)*time/2).*sin((w+w0)*time/2)/(w0-2*w)/(w0-w)) ;
-
 %transition_prob_theory = matrix_element^2 * (sin((w-w0) * time / 2)/(w0-w) ).^ 2 ;
 
 
@@ -224,24 +221,51 @@ fs = 22; % this is the fontsize I used, seems to be working pretty well on latex
 
 % Plot the transition probability from code and theoretical calculations
 if plot_transition_probabilities
-    figure('Name','Transition Probabilities');
+    figure('Name', 'Transition Probabilities: Numerical vs. Theory', 'Color', 'w');
     hold on;
-        plot(time/pi, transition_probabilities, 'LineWidth', 2.2, 'DisplayName', 'Numerical (Split-Operator)', 'Color', 'b');
-        if plot_theory
-            plot(time/pi, transition_prob_theory, 'LineWidth', 2.2, 'DisplayName', 'Theoretical (1st order)', 'Color', 'r');
-            plot(time/pi, transition_prob_theory + second_order_theory, 'LineWidth', 2.2, 'DisplayName', 'Theoretical (cross terms)', 'Color', 'g');
-        end
-    legend
-    %title('Transition Probability to First Excited State');
-    xlim([0, T/pi]);
-    xlabel('Time, multiples of $\pi$', 'FontSize', fs, 'Interpreter', 'latex');
-    ylabel('Transition Probability', 'FontSize', fs, 'Interpreter', 'latex');
+    
+    % Plot numerical results
+    plot(time / pi, transition_probabilities, 'LineWidth', 2.9, ...
+         'DisplayName', 'Numerical (Split-Operator)', ...
+         'Color', [0.0, 0.447, 0.741], ... % Blue
+         'LineStyle', '-');
+    
+    % Plot theoretical results if enabled
+    if plot_theory
+        plot(time / pi, transition_prob_theory, 'LineWidth', 2.9, ...
+             'DisplayName', 'Theoretical (TDPT)', ...
+             'Color', [0.850, 0.325, 0.098], ... % Red
+             'LineStyle', '--');
+    end
+    
+    % Customize axes
+    xlim([0, 70]); % Adjust the x-axis range
+    ylim([0, max(transition_prob_theory)*1.2]); % Adjust the y-axis range
+    xlabel('Time (multiples of $\pi$)', 'FontSize', fs, 'Interpreter', 'latex');
+    ylabel('Transition Probability $P_{1 \leftarrow 0}$', 'FontSize', fs, 'Interpreter', 'latex');
+    
+    % Add grid, frame, and legend
     grid on;
-    %yticks([0, 0.01, 0.02, 0.03, 0.04]); % use this to manually set y ticks
-
-    pbaspect([2 1 1]); % Uncomment if you want a specific aspect ratio
-    % Optimize tick marks and their size
+    box on;
+    legend('FontSize', fs, 'Location', 'northeast', 'Box', 'on', 'Interpreter', 'latex');
+    
+    % Annotation box for parameters
+    annotation('textbox', [0.24, 0.625, 0.1, 0.1], ...
+               'String', sprintf('$A = %.2f$, $\\omega = %.2f$, $T = %.0f \\pi$', A, w, T / pi), ...
+               'Interpreter', 'latex', ...
+               'FontSize', fs, ...
+               'LineStyle', '-', ...
+               'EdgeColor', 'k', ...
+               'BackgroundColor', [0.9, 0.9, 0.9], ...
+               'HorizontalAlignment', 'center', ...
+               'VerticalAlignment', 'middle');
+    
+    % Final adjustments for style
     set(gca, 'FontSize', fs, 'LineWidth', 1.2);
-    %exportgraphics(gcf, sprintf('Q5_Transition_Theory_v_Numerical_A=%.3f_w=%.3f.png', A, w), 'Resolution', 300);
+    pbaspect([2 1 1]); % Maintain consistent aspect ratio
+    
+    % Save the plot
+    exportgraphics(gcf, sprintf('Q5_Transition_Theory_v_Numerical_A=%.3f_w=%.3f.png', A, w), 'Resolution', 300);
+    
     hold off;
 end
